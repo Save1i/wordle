@@ -11,7 +11,7 @@ const Board = memo(({finalWord, gaps}) => {
         <ul className="board__gaps">
         {
             gaps.map((el, index) => (
-                <li key={index} className="gap">{el}</li>
+                <li key={index} className={el.status + " gap"}>{el.letter}</li>
             ))
         }
         </ul>

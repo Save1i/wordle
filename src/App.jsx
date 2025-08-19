@@ -2,16 +2,19 @@ import { useEffect, useState } from 'react';
 import './App.css';
 import { dataW } from './data/mockData';
 import Board from './Board';
+import { useRef } from 'react';
 
 function App() {
   const [word, setWord] = useState(null);
-  const [finallWord, setfinallWord] = useState({}); // Текущая нажатая буква
+  // const [finallWord, setfinallWord] = useState({}); // Текущая нажатая буква
+  const finallWord = useRef([])
   const [currentWord, setCurrentWord] = useState([]);    // Текущее слово (массив букв)
 
   // Сделать массивом объектов
-  const [gaps, setgaps] = useState(Array(30).fill('')); // Все ячейки (6 рядов × 5 колонок)
+  const [gaps, setgaps] = useState(Array(30).fill().map(() => ({letter: "", status: "default"}))); // Все ячейки (6 рядов × 5 колонок)
 
   const [currentCellIndex, setCurrentCellIndex] = useState(0); // Текущая активная ячейка
+  const startCellIndex = useRef(0)
 
   // Загрузка данных и выбор случайного слова (1 раз при монтировании)
   useEffect(() => {
@@ -65,7 +68,7 @@ const check = (guessedWordArr) => {
           if (prev.length === 0) return prev;
           const newWord = prev.slice(0, -1);
           const newgaps = [...gaps];
-          newgaps[currentCellIndex - 1] = ''; // Очищаем предыдущую ячейку
+          newgaps[currentCellIndex - 1] = {letter: "", status: "default"}; // Очищаем предыдущую ячейку
           setgaps(newgaps);
           setCurrentCellIndex((prev) => prev - 1);
           return newWord;
@@ -80,15 +83,26 @@ const check = (guessedWordArr) => {
           
           // Обновляем ячейки
           const newgaps = [...gaps];
-          newgaps[currentCellIndex] = key;
+          console.log(newgaps)
+          newgaps[currentCellIndex].letter = key;
           setgaps(newgaps);
           setCurrentCellIndex((prev) => prev + 1);
 
           // Если слово из 5 букв завершено
           if (newWord.length === 5) {
             console.log(newWord)
+            console.log(currentCellIndex)
+
             console.log('Слово:', newWord.join(''));
-            setfinallWord(check(newWord))
+            finallWord.current = (check(newWord))
+
+            const newgaps = [...gaps];
+            const wordLetters = finallWord.current
+            console.log(startCellIndex, currentCellIndex)
+            newgaps.splice(startCellIndex.current, 5, ...wordLetters)
+            setgaps(newgaps)
+
+            startCellIndex.current += 5
             return []; // Сбрасываем текущее слово
           }
           return newWord;

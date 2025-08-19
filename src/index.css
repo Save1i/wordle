@@ -40,4 +40,20 @@ body {
   border: 1px solid #fff
 }
 
+.default {
+
+}
+
+.correct {
+  border: 2px solid #00ff00
+}
+
+.present {
+  border: 2px solid #ddff00ff
+}
+
+.absent {
+    border: 2px solid #777777ff
+}
+
 
