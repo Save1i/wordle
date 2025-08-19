@@ -6,7 +6,6 @@ import { useRef } from 'react';
 
 function App() {
   const [word, setWord] = useState(null);
-  // const [finallWord, setfinallWord] = useState({}); // Текущая нажатая буква
   const finallWord = useRef([])
   const [currentWord, setCurrentWord] = useState([]);    // Текущее слово (массив букв)
 
@@ -117,7 +116,7 @@ const check = (guessedWordArr) => {
   return (
     <>
       <p>Загаданное слово: {word}</p>
-      <Board finalWord={finallWord} gaps={gaps} />
+      <Board gaps={gaps} />
     </>
   );
 }

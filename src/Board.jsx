@@ -1,10 +1,9 @@
 import { memo, useEffect, useState } from "react"
 import "./index.css"
 
-const Board = memo(({finalWord, gaps}) => {
+const Board = memo(({gaps}) => {
 
     console.log(gaps)
-    console.log(finalWord)
 
     return (
         <>
