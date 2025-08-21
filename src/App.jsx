@@ -3,11 +3,14 @@ import './App.css';
 import { dataW } from './data/mockData';
 import Board from './Board';
 import { useRef } from 'react';
+import EndOfGame from './EndOfGame';
 
 function App() {
   const [word, setWord] = useState(null);
   const finallWord = useRef([])
   const [currentWord, setCurrentWord] = useState([]);    // Текущее слово (массив букв)
+
+  const [win, setWin] = useState(null)
 
   // Сделать массивом объектов
   const [gaps, setgaps] = useState(Array(30).fill().map(() => ({letter: "", status: "default"}))); // Все ячейки (6 рядов × 5 колонок)
@@ -56,6 +59,11 @@ const check = (guessedWordArr) => {
   return result;
 };
 
+const checkWin = (wordResult) => {
+  if (!wordResult) return false;
+  return wordResult.every(letter => letter.status === "correct");
+};
+
   // Обработка нажатия клавиш
   useEffect(() => {
     const handleKeyPress = (event) => {
@@ -97,9 +105,17 @@ const check = (guessedWordArr) => {
 
             const newgaps = [...gaps];
             const wordLetters = finallWord.current
-            console.log(startCellIndex, currentCellIndex)
+            // console.log(startCellIndex, currentCellIndex)
             newgaps.splice(startCellIndex.current, 5, ...wordLetters)
             setgaps(newgaps)
+
+            console.log(finallWord.current)
+                        if (checkWin(finallWord.current)) {
+              setWin(true);
+            } 
+            else if (startCellIndex.current === 25) { // 5 попыток × 5 букв = 25
+              setWin(false);
+            }
 
             startCellIndex.current += 5
             return []; // Сбрасываем текущее слово
@@ -109,6 +125,16 @@ const check = (guessedWordArr) => {
       }
     };
 
+    if(win) {
+      window.removeEventListener('keydown', handleKeyPress);
+      return
+    }
+
+    if(currentCellIndex === 30) {
+      window.removeEventListener('keydown', handleKeyPress);
+      return
+    }
+
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [gaps, currentCellIndex]); // Зависимости для актуальных значений
@@ -117,6 +143,7 @@ const check = (guessedWordArr) => {
     <>
       <p>Загаданное слово: {word}</p>
       <Board gaps={gaps} />
+      <EndOfGame win={win}/>
     </>
   );
 }

@@ -56,4 +56,21 @@ body {
     border: 2px solid #777777ff
 }
 
+.result {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  height: 200px;
+  width: 400px;
+  background-color: #fff;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.result__text {
+
+}
 
