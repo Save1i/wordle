@@ -160,3 +160,7 @@ body {
   }
 }
 
+.overlay {
+  touch-action: none;
+}
+
