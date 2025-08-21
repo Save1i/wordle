@@ -1,33 +1,68 @@
-import { memo, useRef, useState, useEffect } from "react"
+import { memo, useRef, useState, useEffect, useCallback } from "react"
 import "./index.css"
 
 const Board = memo(({ gaps }) => {
   const inputRef = useRef(null);
   const [showOverlay, setShowOverlay] = useState(true);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const isFocusingRef = useRef(false);
 
   // Определяем, является ли устройство мобильным
   useEffect(() => {
     const checkMobile = () => {
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isSmallScreen = window.innerWidth <= 768;
       
-      setIsMobileDevice(isMobile && hasTouch);
+      setIsMobileDevice((isMobile || hasTouch) && isSmallScreen);
     };
 
     checkMobile();
-    
-    // Также проверяем при изменении размера окна (на случай ориентации)
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const handleActivate = () => {
+  const handleActivate = useCallback(() => {
     if (inputRef.current) {
+      isFocusingRef.current = true;
       inputRef.current.focus();
-      setTimeout(() => setShowOverlay(false), 50);
+      
+      // Не скрываем overlay сразу, даем время на фокус
+      setTimeout(() => {
+        setShowOverlay(false);
+        isFocusingRef.current = false;
+      }, 100);
     }
-  };
+  }, []);
+
+  // Скрываем overlay при успешном фокусе
+  useEffect(() => {
+    const handleFocus = () => {
+      setShowOverlay(false);
+    };
+
+    const handleBlur = (e) => {
+      // Не показываем overlay если это было программное сворачивание клавиатуры
+      // или если мы в процессе фокусировки
+      if (!isFocusingRef.current && isMobileDevice) {
+        // Небольшая задержка чтобы избежать мигания
+        setTimeout(() => setShowOverlay(true), 200);
+      }
+    };
+
+    const input = inputRef.current;
+    if (input) {
+      input.addEventListener('focus', handleFocus);
+      input.addEventListener('blur', handleBlur);
+    }
+
+    return () => {
+      if (input) {
+        input.removeEventListener('focus', handleFocus);
+        input.removeEventListener('blur', handleBlur);
+      }
+    };
+  }, [isMobileDevice]);
 
   // Показываем overlay только на мобильных устройствах
   const shouldShowOverlay = showOverlay && isMobileDevice;
@@ -42,13 +77,9 @@ const Board = memo(({ gaps }) => {
           opacity: 0,
           pointerEvents: 'none',
           height: 0,
-          width: 0
-        }}
-        onFocus={() => setShowOverlay(false)}
-        onBlur={() => {
-          if (isMobileDevice) {
-            setShowOverlay(true);
-          }
+          width: 0,
+          top: 0,
+          left: 0
         }}
       />
       
@@ -64,21 +95,26 @@ const Board = memo(({ gaps }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
             fontSize: '18px',
-            textAlign: 'center'
+            textAlign: 'center',
+            touchAction: 'none' // Предотвращаем скролл
           }}
-          onTouchStart={handleActivate}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            handleActivate();
+          }}
           onClick={handleActivate}
         >
           <div style={{ 
-            padding: '40px', 
+            padding: '30px', 
             border: '2px dashed #fff',
             color: '#fff',
             borderRadius: '15px',
-            background: 'rgba(0, 0, 0, 0.5)'
+            background: 'rgba(0, 0, 0, 0.7)',
+            maxWidth: '80%'
           }}>
-            👆 Tap anywhere to start typing
+            👆 Tap to start typing
           </div>
         </div>
       )}
