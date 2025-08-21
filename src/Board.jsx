@@ -7,13 +7,15 @@ const Board = memo(({gaps}) => {
 
     return (
         <>
-        <ul className="board__gaps">
-        {
-            gaps.map((el, index) => (
-                <li key={index} className={el.status + " gap"}>{el.letter}</li>
-            ))
-        }
-        </ul>
+        <div className="board">
+            <ul className="board__gaps">
+            {
+                gaps.map((el, index) => (
+                    <li key={index} className={el.status + " gap"}>{el.letter}</li>
+                ))
+            }
+            </ul>
+        </div>
         </>
     )
 })

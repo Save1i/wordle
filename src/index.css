@@ -22,38 +22,74 @@ a:hover {
   color: #535bf2;
 }
 
+ul, ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background: #121213;
+}
+
+.board {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: center;
 }
 
 .board__gaps {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px
+  grid-template-columns: repeat(5, 60px);
+  gap: 10px;
 }
 
 .gap {
-  height: 30px;
-  width: 30px;
-  border: 1px solid #fff
+  height: 60px;
+  width: 60px;
+  border: 1px solid #fff;
+  color: #f8f8f8;
+  box-sizing: border-box;
+  width: 100%;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  line-height: 1;
+  font-weight: bold;
+  vertical-align: middle;
+  text-transform: uppercase;
 }
 
 .default {
-
+  border: 2px solid #3a3a3c;
 }
 
 .correct {
-  border: 2px solid #00ff00
+  border: none;
+  background: #538d4e;
 }
 
 .present {
-  border: 2px solid #ddff00ff
+  border: none;
+  background: #b59f3b;
 }
 
 .absent {
-    border: 2px solid #777777ff
+    border: none;
+    background: #3a3a3c;
 }
 
 .result {
@@ -61,16 +97,66 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  height: 200px;
-  width: 400px;
-  background-color: #fff;
-  color: #000;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 20px;
+  padding: 30px;
+  background-color: #121213;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border: 2px solid #3a3a3c;
+  text-align: center;
+  max-width: 400px;
+  margin: 20px auto;
 }
 
 .result__text {
+  font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 8px 0;
+  letter-spacing: 0.5px;
+}
 
+.result button {
+  background-color: #538d4e;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 24px;
+  font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.result button:hover {
+  background-color: #4a7c59;
+  transform: translateY(-2px);
+}
+
+.result button:active {
+  transform: translateY(0);
+}
+
+.result {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    top: 30%
+  }
+  to {
+    opacity: 1;
+    top: 50%;
+  }
 }
 
