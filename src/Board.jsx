@@ -1,10 +1,11 @@
 import { memo, useRef, useState, useEffect, useCallback } from "react"
 import "./index.css"
 
-const Board = memo(({ gaps, restart }) => {
+const Board = memo(({ gaps, restart, onKeyPress }) => {
   const inputRef = useRef(null);
   const [showOverlay, setShowOverlay] = useState(true);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const previousValue = useRef('');
 
   // Определяем, является ли устройство мобильным
   useEffect(() => {
@@ -23,11 +24,41 @@ const Board = memo(({ gaps, restart }) => {
 
   useEffect(() => {
     if(inputRef.current) {
-      inputRef.current.value = ''
-      console.log(inputRef.current.value)
+      inputRef.current.value = '';
+      previousValue.current = '';
     }
+  }, [restart]);
 
-  }, [restart])
+  // Обработка ввода с мобильной клавиатуры
+  const handleInput = (e) => {
+    const currentValue = e.target.value;
+    
+    // Фильтруем только английские буквы a-z
+    const filteredValue = currentValue.replace(/[^a-z]/g, '');
+    
+    if (filteredValue !== currentValue) {
+      e.target.value = filteredValue;
+      return;
+    }
+    
+    // Определяем новые символы
+    if (filteredValue.length > previousValue.current.length) {
+      const newChars = filteredValue.slice(previousValue.current.length);
+      
+      // Отправляем каждый новый символ
+      for (let char of newChars) {
+        if (/^[a-z]$/.test(char)) {
+          onKeyPress(char);
+        }
+      }
+    } 
+    // Определяем backspace (удаление)
+    else if (filteredValue.length < previousValue.current.length) {
+      onKeyPress('Backspace');
+    }
+    
+    previousValue.current = filteredValue;
+  };
 
   // Скрыть overlay при фокусе
   useEffect(() => {
@@ -35,9 +66,7 @@ const Board = memo(({ gaps, restart }) => {
       setShowOverlay(false);
     };
 
-    const handleBlur = (e) => {
-      // Не показываем overlay если это было программное сворачивание клавиатуры
-      // или если мы в процессе фокусировки
+    const handleBlur = () => {
       if (isMobileDevice) {
         setTimeout(() => setShowOverlay(true), 200);
       }
@@ -47,34 +76,36 @@ const Board = memo(({ gaps, restart }) => {
     if (input) {
       input.addEventListener('focus', handleFocus);
       input.addEventListener('blur', handleBlur);
+      input.addEventListener('input', handleInput);
     }
 
     return () => {
       if (input) {
         input.removeEventListener('focus', handleFocus);
         input.removeEventListener('blur', handleBlur);
+        input.removeEventListener('input', handleInput);
       }
     };
-  }, [isMobileDevice]);
+  }, [isMobileDevice, onKeyPress]);
 
-  // overlay только на мобильных устройствах
   const shouldShowOverlay = isMobileDevice;
-
-  console.log(showOverlay + " show")
 
   return (
     <>
       <div className="board">
         {shouldShowOverlay && (
-          <div style={{opacity: showOverlay ? 1 : 0, transition: 'opacity 0.3s ease-in-out'}} >
-            <p className="phone__text" >Tap on the screen👆</p>
+          <div style={{opacity: showOverlay ? 1 : 0, transition: 'opacity 0.3s ease-in-out'}}>
+            <p className="phone__text">Tap on the screen👆</p>
             <input 
               ref={inputRef} 
               type="text"
               className="phone__input" 
-              />
-            </div>
-          )}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck="false"
+            />
+          </div>
+        )}
         <ul className="board__gaps">
           {gaps.map((el, index) => (
             <li key={index} className={el.status + " gap"}>{el.letter}</li>
