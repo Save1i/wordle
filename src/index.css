@@ -42,15 +42,16 @@ body {
 }
 
 .board {
+  position: relative;
+  height: 410px;
+  width: 340px;
+}
+
+.board__gaps {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  display: flex;
-  justify-content: center;
-}
-
-.board__gaps {
   display: grid;
   grid-template-columns: repeat(5, 60px);
   gap: 10px;
@@ -96,6 +97,7 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
+  z-index: 100;
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
@@ -162,5 +164,35 @@ body {
 
 .overlay {
   touch-action: none;
+}
+
+.phone__input {
+  caret-color: transparent;
+  position: absolute;
+  z-index: 50;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background: none;
+  border: none;
+  outline-offset: 10px;
+  opacity: 0;
+  /* box-shadow:inset 0px 0px 0px 10px #f00; */
+}
+
+.phone__text {
+  position: absolute;
+  z-index: 50;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: bold;
+  padding: 25px 20px;
+  min-width: 220px;
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  border-radius: 5px;
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
