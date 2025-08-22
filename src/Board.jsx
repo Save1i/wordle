@@ -1,11 +1,10 @@
 import { memo, useRef, useState, useEffect, useCallback } from "react"
 import "./index.css"
 
-const Board = memo(({ gaps }) => {
+const Board = memo(({ gaps, restart }) => {
   const inputRef = useRef(null);
   const [showOverlay, setShowOverlay] = useState(true);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
-  const isFocusingRef = useRef(false);
 
   // Определяем, является ли устройство мобильным
   useEffect(() => {
@@ -22,20 +21,15 @@ const Board = memo(({ gaps }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const handleActivate = useCallback(() => {
-    if (inputRef.current) {
-      isFocusingRef.current = true;
-      inputRef.current.focus();
-      
-      // Не скрываем overlay сразу, даем время на фокус
-      setTimeout(() => {
-        setShowOverlay(false);
-        isFocusingRef.current = false;
-      }, 100);
+  useEffect(() => {
+    if(inputRef.current) {
+      inputRef.current.value = ''
+      console.log(inputRef.current.value)
     }
-  }, []);
 
-  // Скрываем overlay при успешном фокусе
+  }, [restart])
+
+  // Скрыть overlay при фокусе
   useEffect(() => {
     const handleFocus = () => {
       setShowOverlay(false);
@@ -44,8 +38,7 @@ const Board = memo(({ gaps }) => {
     const handleBlur = (e) => {
       // Не показываем overlay если это было программное сворачивание клавиатуры
       // или если мы в процессе фокусировки
-      if (!isFocusingRef.current && isMobileDevice) {
-        // Небольшая задержка чтобы избежать мигания
+      if (isMobileDevice) {
         setTimeout(() => setShowOverlay(true), 200);
       }
     };
@@ -64,62 +57,24 @@ const Board = memo(({ gaps }) => {
     };
   }, [isMobileDevice]);
 
-  // Показываем overlay только на мобильных устройствах
-  const shouldShowOverlay = showOverlay && isMobileDevice;
+  // overlay только на мобильных устройствах
+  const shouldShowOverlay = isMobileDevice;
+
+  console.log(showOverlay + " show")
 
   return (
     <>
-      <input
-        ref={inputRef}
-        type="text"
-        style={{
-          position: 'absolute',
-          opacity: 0,
-          pointerEvents: 'none',
-          height: 0,
-          width: 0,
-          top: 0,
-          left: 0
-        }}
-      />
-      
-      {shouldShowOverlay && (
-        <div 
-          style={{ 
-            position: 'fixed',
-            zIndex: 100,
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'rgba(0, 0, 0, 0.9)',
-            fontSize: '18px',
-            textAlign: 'center',
-            touchAction: 'none' // Предотвращаем скролл
-          }}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            handleActivate();
-          }}
-          onClick={handleActivate}
-        >
-          <div style={{ 
-            padding: '30px', 
-            border: '2px dashed #fff',
-            color: '#fff',
-            borderRadius: '15px',
-            background: 'rgba(0, 0, 0, 0.7)',
-            maxWidth: '80%'
-          }}>
-            👆 Tap to start typing
-          </div>
-        </div>
-      )}
-      
       <div className="board">
+        {shouldShowOverlay && (
+          <div style={{opacity: showOverlay ? 1 : 0, transition: 'opacity 0.3s ease-in-out'}} >
+            <p className="phone__text" >Tap on the screen👆</p>
+            <input 
+              ref={inputRef} 
+              type="text"
+              className="phone__input" 
+              />
+            </div>
+          )}
         <ul className="board__gaps">
           {gaps.map((el, index) => (
             <li key={index} className={el.status + " gap"}>{el.letter}</li>

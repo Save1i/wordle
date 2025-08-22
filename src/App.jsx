@@ -154,7 +154,7 @@ function App() {
   return (
     <>
       {/* <p>Загаданное слово: {word}</p> */}
-      <Board gaps={gaps} />
+      <Board gaps={gaps} restart={resetGame}/>
       <EndOfGame result={resultOfGame} startGame={startGame} restart={reset} word={word}/>
     </>
   );
