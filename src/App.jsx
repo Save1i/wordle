@@ -1,26 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import './App.css';
 import { dataW } from './data/mockData';
 import Board from './Board';
-import { useRef } from 'react';
 import EndOfGame from './EndOfGame';
 
 function App() {
   const [word, setWord] = useState(null);
   const finallWord = useRef([])
-  const [currentWord, setCurrentWord] = useState([]); // Текущее слово (массив букв)
-
+  const [currentWord, setCurrentWord] = useState([]);
   const [resultOfGame, setresultOfGame] = useState(false)
   const [startGame, setStartGame] = useState(true)
   const [resetGame, setRestGame] = useState(false)
-
-  // Сделать массивом объектов
-  const [gaps, setgaps] = useState(Array(30).fill().map(() => ({letter: "", status: "default"}))); // Все ячейки (6 рядов × 5 колонок)
-
-  const [currentCellIndex, setCurrentCellIndex] = useState(0); // Текущая активная ячейка
+  const [gaps, setgaps] = useState(Array(30).fill().map(() => ({letter: "", status: "default"})));
+  const [currentCellIndex, setCurrentCellIndex] = useState(0);
   const startCellIndex = useRef(0)
 
-  // Загрузка данных и выбор случайного слова (1 раз при монтировании)
+  // Загрузка данных и выбор случайного слова
   useEffect(() => {
     dataW.then((response) => {
       setgaps(Array(30).fill().map(() => ({letter: "", status: "default"})));
@@ -32,35 +27,33 @@ function App() {
     });
   }, [resetGame]);
 
-
   // проверка введенного слова
   const check = (guessedWordArr) => {
+    if (!word) return [];
+    
     const targetWordArr = word.split('');
     const result = [];
 
-    // Создаём копии массивов, чтобы не мутировать оригиналы
     const remainingTargetLetters = [...targetWordArr];
     const remainingGuessedLetters = [...guessedWordArr];
 
-    // Сначала проверяем точные совпадения (буква на своём месте)
     for (let i = 0; i < guessedWordArr.length; i++) {
       if (guessedWordArr[i] === targetWordArr[i]) {
-        result[i] = { letter: guessedWordArr[i], status: 'correct' }; // правильная позиция
-        remainingTargetLetters[i] = null; // Помечаем букву как использованную
+        result[i] = { letter: guessedWordArr[i], status: 'correct' };
+        remainingTargetLetters[i] = null;
         remainingGuessedLetters[i] = null;
       }
     }
 
-    // Затем проверяем буквы, которые есть в слове, но не на своём месте
     for (let i = 0; i < remainingGuessedLetters.length; i++) {
-      if (remainingGuessedLetters[i] === null) continue; // Уже обработанные буквы пропускаем
+      if (remainingGuessedLetters[i] === null) continue;
 
       const foundIndex = remainingTargetLetters.indexOf(guessedWordArr[i]);
       if (foundIndex !== -1) {
-        result[i] = { letter: guessedWordArr[i], status: 'present' }; // есть в слове, но не здесь
-        remainingTargetLetters[foundIndex] = null; // Помечаем букву как использованную
+        result[i] = { letter: guessedWordArr[i], status: 'present' };
+        remainingTargetLetters[foundIndex] = null;
       } else {
-        result[i] = { letter: guessedWordArr[i], status: 'absent' }; // нет в слове
+        result[i] = { letter: guessedWordArr[i], status: 'absent' };
       }
     }
     return result;
@@ -71,91 +64,96 @@ function App() {
     return wordResult.every(letter => letter.status === "correct");
   };
 
-  // Обработка нажатия клавиш
-  useEffect(() => {
-    const handleKeyPress = (event) => {
-      const key = event.key;
+  // Обработчик нажатия клавиш (универсальный для ПК и мобильных)
+  const handleKeyPress = useCallback((key) => {
+    if (!startGame) return;
 
-      // Backspace - удаляем последнюю букву
-      if (key === 'Backspace') {
-        setCurrentWord((prev) => {
-          if (prev.length === 0) return prev;
-          const newWord = prev.slice(0, -1);
+    // Backspace - удаляем последнюю букву
+    if (key === 'Backspace') {
+      setCurrentWord((prev) => {
+        if (prev.length === 0) return prev;
+        const newWord = prev.slice(0, -1);
+        const newgaps = [...gaps];
+        newgaps[currentCellIndex - 1] = {letter: "", status: "default"};
+        setgaps(newgaps);
+        setCurrentCellIndex((prev) => prev - 1);
+        return newWord;
+      });
+      return;
+    }
+
+    // Буква a-z - добавляем в текущее слово
+    if (/^[a-z]$/.test(key)) {
+      setCurrentWord((prev) => {
+        const newWord = [...prev, key];
+        
+        const newgaps = [...gaps];
+        newgaps[currentCellIndex].letter = key;
+        setgaps(newgaps);
+        setCurrentCellIndex((prev) => prev + 1);
+
+        // Если слово из 5 букв завершено
+        if (newWord.length === 5) {
+          finallWord.current = check(newWord);
           const newgaps = [...gaps];
-          newgaps[currentCellIndex - 1] = {letter: "", status: "default"}; // Очищаем предыдущую ячейку
+          const wordLetters = finallWord.current;
+          newgaps.splice(startCellIndex.current, 5, ...wordLetters);
           setgaps(newgaps);
-          setCurrentCellIndex((prev) => prev - 1);
-          return newWord;
-        });
-        return;
-      }
 
-      // Буква a-z - добавляем в текущее слово
-      if (/^[a-z]$/.test(key)) {
-        setCurrentWord((prev) => {
-          const newWord = [...prev, key];
-          
-          // Обновляем ячейки
-          const newgaps = [...gaps];
-          console.log(newgaps)
-          newgaps[currentCellIndex].letter = key;
-          setgaps(newgaps);
-          setCurrentCellIndex((prev) => prev + 1);
-
-          // Если слово из 5 букв завершено
-          if (newWord.length === 5) {
-            console.log(newWord)
-            console.log(currentCellIndex)
-
-            console.log('Слово:', newWord.join(''));
-            finallWord.current = (check(newWord))
-
-            const newgaps = [...gaps];
-            const wordLetters = finallWord.current
-            // console.log(startCellIndex, currentCellIndex)
-            newgaps.splice(startCellIndex.current, 5, ...wordLetters)
-            setgaps(newgaps)
-
-            console.log(finallWord.current)
-
-            if (checkWin(finallWord.current)) {
-              setStartGame(false)
-              setresultOfGame(true);
-            } 
-            else if (startCellIndex.current === 25) {
-              setStartGame(false)
-              setresultOfGame(false);
-            }
-
-            startCellIndex.current += 5
-            return []; // Сбрасываем текущее слово
+          if (checkWin(finallWord.current)) {
+            setStartGame(false);
+            setresultOfGame(true);
+          } else if (startCellIndex.current === 25) {
+            setStartGame(false);
+            setresultOfGame(false);
           }
-          return newWord;
-        });
+
+          startCellIndex.current += 5;
+          return [];
+        }
+        return newWord;
+      });
+    }
+  }, [gaps, currentCellIndex, startGame, check, checkWin]);
+
+  // Обработка клавиш ПК
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (!startGame) return;
+      
+      const key = event.key;
+      
+      // Игнорируем специальные сочетания клавиш
+      if (event.ctrlKey || event.altKey || event.metaKey) return;
+      
+      if (key === 'Backspace' || /^[a-z]$/.test(key)) {
+        event.preventDefault();
+        handleKeyPress(key);
       }
     };
 
-    if(!startGame) {
-      window.removeEventListener('keydown', handleKeyPress);
-      return
-    }
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [gaps, currentCellIndex]); // Зависимости для актуальных значений
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyPress, startGame]);
 
   const reset = (e) => {
-    setStartGame(e)
-    setRestGame((e) => !e)
+    setStartGame(e);
+    setRestGame((prev) => !prev);
   }
-
-  console.log(startGame + "  game")
 
   return (
     <>
-      {/* <p>Загаданное слово: {word}</p> */}
-      <Board gaps={gaps} restart={resetGame}/>
-      <EndOfGame result={resultOfGame} startGame={startGame} restart={reset} word={word}/>
+      <Board 
+        gaps={gaps} 
+        restart={resetGame}
+        onKeyPress={handleKeyPress}
+      />
+      <EndOfGame 
+        result={resultOfGame} 
+        startGame={startGame} 
+        restart={reset} 
+        word={word}
+      />
     </>
   );
 }
